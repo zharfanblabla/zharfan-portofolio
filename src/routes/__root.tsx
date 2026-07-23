@@ -77,21 +77,31 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Muhammad Zharfan | Network Engineer" },
+      {
+        name: "description",
+        content:
+          "Portfolio of Muhammad Zharfan Tashbir Thariqi — Network Engineer, MikroTik MTCNA & MTCRE Certified, Cisco CCNA. Available for Network Engineer and NOC Engineer roles.",
+      },
+      { name: "author", content: "Muhammad Zharfan Tashbir Thariqi" },
+      { property: "og:title", content: "Muhammad Zharfan | Network Engineer" },
+      {
+        property: "og:description",
+        content:
+          "Portfolio of Muhammad Zharfan Tashbir Thariqi — MikroTik MTCNA & MTCRE Certified, Cisco CCNA. Open to Network Engineer & NOC Engineer roles.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: appCss,
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
   }),
   shellComponent: RootShell,
