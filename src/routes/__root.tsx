@@ -88,10 +88,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "Portfolio of Muhammad Zharfan Tashbir Thariqi — MikroTik MTCNA & MTCRE Certified, Cisco CCNA. Open to Network Engineer & NOC Engineer roles.",
+          "Portfolio of Muhammad Zharfan Tashbir Thariqi — Network Engineer, MikroTik MTCNA & MTCRE Certified, Cisco CCNA. Available for Network Engineer and NOC Engineer roles.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Muhammad Zharfan | Network Engineer" },
+      { name: "twitter:description", content: "Portfolio of Muhammad Zharfan Tashbir Thariqi — Network Engineer, MikroTik MTCNA & MTCRE Certified, Cisco CCNA. Available for Network Engineer and NOC Engineer roles." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8a553401-1d3b-413e-b22a-1c63e3ebbee7/id-preview-3aba866a--ec48d793-e2d2-4bf9-998e-f29b34734d72.lovable.app-1784802794521.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/8a553401-1d3b-413e-b22a-1c63e3ebbee7/id-preview-3aba866a--ec48d793-e2d2-4bf9-998e-f29b34734d72.lovable.app-1784802794521.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
