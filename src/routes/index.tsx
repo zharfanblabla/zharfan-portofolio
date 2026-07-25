@@ -120,7 +120,7 @@ function Nav() {
         </nav>
         <div className="flex items-center gap-3">
           <a
-            href="/CV_Muhammad_Zharfan.pdf"
+            href="/CV Muhammad Zharfan Tashbir.pdf"
             download
             className="hidden sm:inline-flex items-center gap-2 rounded-[8px] bg-[#22d3ee] px-4 py-2 text-sm font-semibold text-[#0b1120] transition-all hover:bg-[#67e8f9] hover:shadow-[0_0_20px_rgba(34,211,238,0.4)]"
           >
@@ -350,7 +350,7 @@ function Hero() {
             → View My Projects
           </button>
           <a
-            href="/CV_Muhammad_Zharfan.pdf"
+            href="/CV Muhammad Zharfan Tahbir.pdf"
             download
             className="inline-flex items-center gap-2 rounded-[8px] border border-[#22d3ee] px-5 py-3 text-sm font-semibold text-[#22d3ee] transition-all hover:bg-[#22d3ee]/10"
           >
