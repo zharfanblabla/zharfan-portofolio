@@ -552,7 +552,7 @@ const CERTS = [
     issuer: "Cisco Networking Academy",
     year: "2026",
     desc: "Multi-area OSPF implementation, WAN architecture, network security hardening, QoS, and network automation fundamentals.",
-    image: "/certs/ccna-ensa.png",
+    image: "/certs/ccna-ensa.jpeg",
   },
   {
     id: "ccna-srwe",
@@ -562,7 +562,7 @@ const CERTS = [
     issuer: "Cisco Networking Academy",
     year: "2026",
     desc: "VLAN segmentation, STP/RSTP topology, EtherChannel bundling, Inter-VLAN routing, DHCP, WLAN, and FHRP redundancy.",
-    image: "/certs/ccna-srwe.png",
+    image: "/Certificate/CCNA ENSA Certificate.jpg",
   },
   {
     id: "ccna-itn",
