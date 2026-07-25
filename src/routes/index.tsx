@@ -172,204 +172,110 @@ function Nav() {
   );
 }
 
-/* ---------------- Network Canvas ---------------- */
+/* ---------------- Uploadable Image (localStorage) ---------------- */
 
-type NodeT = {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  baseX: number;
-  baseY: number;
-  label: string;
-  role: string;
-};
-
-const NODE_META = [
-  { label: "R1", role: "Core Router — OSPF" },
-  { label: "R2", role: "Edge Router — BGP" },
-  { label: "SW1", role: "L2 Switch — VTP" },
-  { label: "SW2", role: "L3 Switch — HSRP" },
-  { label: "FW", role: "Firewall — ACL" },
-  { label: "AP", role: "Access Point" },
-  { label: "MT", role: "MikroTik — MTCRE" },
-  { label: "SRV", role: "NOC Server" },
-];
-
-function NetworkCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; text: string } | null>(null);
-
+function useLocalImage(key: string) {
+  const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
-    const canvas = canvasRef.current!;
-    const wrap = wrapRef.current!;
-    const ctx = canvas.getContext("2d")!;
-    let raf = 0;
-    let nodes: NodeT[] = [];
-    let edges: [number, number][] = [];
-    let hovered = -1;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-
-    const resize = () => {
-      const r = wrap.getBoundingClientRect();
-      canvas.width = r.width * dpr;
-      canvas.height = r.height * dpr;
-      canvas.style.width = `${r.width}px`;
-      canvas.style.height = `${r.height}px`;
-      layout(r.width, r.height);
-    };
-
-    const layout = (w: number, h: number) => {
-      const cx = w / 2;
-      const cy = h / 2;
-      const R = Math.min(w, h) * 0.36;
-      nodes = NODE_META.map((m, i) => {
-        const a = (i / NODE_META.length) * Math.PI * 2 - Math.PI / 2;
-        const x = cx + Math.cos(a) * R;
-        const y = cy + Math.sin(a) * R;
-        return {
-          x,
-          y,
-          vx: 0,
-          vy: 0,
-          baseX: x,
-          baseY: y,
-          label: m.label,
-          role: m.role,
-        };
-      });
-      edges = [
-        [0, 1], [0, 2], [1, 3], [2, 3], [2, 4], [3, 5],
-        [4, 6], [5, 6], [6, 7], [7, 0], [1, 4], [3, 7],
-      ];
-    };
-
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(wrap);
-
-    const onMove = (ev: MouseEvent) => {
-      const r = canvas.getBoundingClientRect();
-      const mx = ev.clientX - r.left;
-      const my = ev.clientY - r.top;
-      let found = -1;
-      for (let i = 0; i < nodes.length; i++) {
-        const dx = nodes[i].x - mx;
-        const dy = nodes[i].y - my;
-        if (dx * dx + dy * dy < 22 * 22) {
-          found = i;
-          break;
-        }
+    try {
+      const v = localStorage.getItem(`img:${key}`);
+      if (v) setUrl(v);
+    } catch {}
+  }, [key]);
+  const onFile = (file: File) => {
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      alert("Ukuran gambar maksimal 4MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const data = String(reader.result);
+      try {
+        localStorage.setItem(`img:${key}`, data);
+      } catch {
+        alert("Gagal menyimpan gambar (storage penuh).");
+        return;
       }
-      hovered = found;
-      if (found >= 0) {
-        setTooltip({ x: nodes[found].x, y: nodes[found].y - 34, text: nodes[found].role });
-      } else {
-        setTooltip(null);
-      }
+      setUrl(data);
     };
-    const onLeave = () => {
-      hovered = -1;
-      setTooltip(null);
-    };
-    canvas.addEventListener("mousemove", onMove);
-    canvas.addEventListener("mouseleave", onLeave);
+    reader.readAsDataURL(file);
+  };
+  const clear = () => {
+    localStorage.removeItem(`img:${key}`);
+    setUrl(null);
+  };
+  return { url, onFile, clear };
+}
 
-    let t = 0;
-    const draw = () => {
-      t += 0.016;
-      const w = canvas.width / dpr;
-      const h = canvas.height / dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, w, h);
-
-      // Float
-      nodes.forEach((n, i) => {
-        n.x = n.baseX + Math.sin(t * 0.9 + i) * 4;
-        n.y = n.baseY + Math.cos(t * 0.8 + i * 1.3) * 4;
-      });
-
-      // Edges (dashed) + packets
-      edges.forEach(([a, b], idx) => {
-        const na = nodes[a];
-        const nb = nodes[b];
-        ctx.strokeStyle = "rgba(34,211,238,0.18)";
-        ctx.lineWidth = 1;
-        ctx.setLineDash([4, 6]);
-        ctx.lineDashOffset = -t * 20;
-        ctx.beginPath();
-        ctx.moveTo(na.x, na.y);
-        ctx.lineTo(nb.x, nb.y);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // packet dot
-        const p = ((t * 0.25) + idx * 0.13) % 1;
-        const px = na.x + (nb.x - na.x) * p;
-        const py = na.y + (nb.y - na.y) * p;
-        ctx.fillStyle = "#22d3ee";
-        ctx.shadowColor = "#22d3ee";
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.arc(px, py, 2.4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      });
-
-      // Nodes
-      nodes.forEach((n, i) => {
-        const isHover = i === hovered;
-        const r = isHover ? 16 : 12;
-        // outer glow
-        const grad = ctx.createRadialGradient(n.x, n.y, 2, n.x, n.y, r * 2.2);
-        grad.addColorStop(0, "rgba(34,211,238,0.55)");
-        grad.addColorStop(1, "rgba(34,211,238,0)");
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, r * 2.2, 0, Math.PI * 2);
-        ctx.fill();
-
-        // node core
-        ctx.fillStyle = isHover ? "#22d3ee" : "#0b1120";
-        ctx.strokeStyle = "#22d3ee";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        // label
-        ctx.fillStyle = isHover ? "#0b1120" : "#22d3ee";
-        ctx.font = "600 10px JetBrains Mono, monospace";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(n.label, n.x, n.y);
-      });
-
-      raf = requestAnimationFrame(draw);
-    };
-    raf = requestAnimationFrame(draw);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      ro.disconnect();
-      canvas.removeEventListener("mousemove", onMove);
-      canvas.removeEventListener("mouseleave", onLeave);
-    };
-  }, []);
-
+function UploadableImage({
+  storageKey,
+  aspect = "16/10",
+  label = "Upload foto",
+  color = "#22d3ee",
+}: {
+  storageKey: string;
+  aspect?: string;
+  label?: string;
+  color?: string;
+}) {
+  const { url, onFile, clear } = useLocalImage(storageKey);
+  const inputId = `up-${storageKey}`;
   return (
-    <div ref={wrapRef} className="relative w-full h-[420px] sm:h-[500px]">
-      <canvas ref={canvasRef} className="w-full h-full" />
-      {tooltip && (
-        <div
-          className="pointer-events-none absolute -translate-x-1/2 -translate-y-full mono text-[11px] bg-[#0b1120] border border-[#22d3ee]/50 text-[#22d3ee] rounded-md px-2 py-1 glow-cyan"
-          style={{ left: tooltip.x, top: tooltip.y }}
+    <div
+      className="relative w-full overflow-hidden bg-[#0b1120] border-b border-[#1e293b] group/img"
+      style={{ aspectRatio: aspect }}
+    >
+      {url ? (
+        <>
+          <img src={url} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover/img:opacity-100">
+            <label
+              htmlFor={inputId}
+              className="cursor-pointer mono text-[11px] rounded-md px-3 py-1.5 bg-[#0b1120]/80 border border-[#22d3ee]/50 text-[#22d3ee] hover:bg-[#22d3ee]/10"
+            >
+              Ganti
+            </label>
+            <button
+              type="button"
+              onClick={clear}
+              className="mono text-[11px] rounded-md px-3 py-1.5 bg-[#0b1120]/80 border border-[#ef4444]/50 text-[#ef4444] hover:bg-[#ef4444]/10"
+            >
+              Hapus
+            </button>
+          </div>
+        </>
+      ) : (
+        <label
+          htmlFor={inputId}
+          className="w-full h-full flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors hover:bg-[#111827]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 50% 40%, rgba(34,211,238,0.08), transparent 60%)",
+          }}
         >
-          {tooltip.text}
-        </div>
+          <div
+            className="w-11 h-11 rounded-full flex items-center justify-center border"
+            style={{ borderColor: `${color}55`, background: `${color}18`, color }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </div>
+          <span className="mono text-[11px] text-[#94a3b8]">{label}</span>
+        </label>
       )}
+      <input
+        id={inputId}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onFile(f);
+          e.currentTarget.value = "";
+        }}
+      />
     </div>
   );
 }
@@ -406,9 +312,8 @@ function Hero() {
     const t = setTimeout(() => setStarted(true), 400);
     return () => clearTimeout(t);
   }, []);
-  const certs = useCountUp(3, started);
-  const devices = useCountUp(50, started);
-  const cctvs = useCountUp(77, started);
+  const certs = useCountUp(9, started);
+  const devices = useCountUp(12, started);
 
   return (
     <section id="home" className="relative min-h-screen flex items-center pt-28 pb-16 overflow-hidden">
@@ -419,60 +324,52 @@ function Hero() {
             "radial-gradient(circle at 20% 20%, rgba(34,211,238,0.12), transparent 45%), radial-gradient(circle at 80% 70%, rgba(59,130,246,0.10), transparent 45%)",
         }}
       />
-      <div className="mx-auto max-w-7xl w-full px-6 grid lg:grid-cols-[55fr_45fr] gap-10 items-center relative">
-        <div>
-          <div className="mono text-sm text-[#22d3ee] mb-5">&lt; Network Engineer /&gt;</div>
+      <div className="mx-auto max-w-4xl w-full px-6 text-center relative">
+        <div className="mono text-sm text-[#22d3ee] mb-5">&lt; Welcome to My Portfolio &gt;</div>
+        <div className="flex justify-center">
           <Typewriter />
-          <p className="mt-6 text-[#94a3b8] text-lg">
-            Building Reliable Networks · MikroTik & Cisco Certified
-            <br />
-            NOC Engineer · IT Infrastructure Specialist
-          </p>
-          <p className="mt-5 text-[#94a3b8] max-w-xl leading-relaxed">
-            D4 Network & Computer Engineering student at Politeknik IDN Bogor with
-            dual vendor certifications (MTCNA · MTCRE · CCNA). Experienced in enterprise
-            routing, switching, and network security. Passionate about building efficient,
-            fault-tolerant network infrastructure.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <button
-              onClick={() =>
-                document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="inline-flex items-center gap-2 rounded-[8px] bg-[#22d3ee] px-5 py-3 text-sm font-semibold text-[#0b1120] transition-all hover:bg-[#67e8f9] hover:shadow-[0_0_28px_rgba(34,211,238,0.45)]"
-            >
-              → View My Projects
-            </button>
-            <a
-              href="/CV_Muhammad_Zharfan.pdf"
-              download
-              className="inline-flex items-center gap-2 rounded-[8px] border border-[#22d3ee] px-5 py-3 text-sm font-semibold text-[#22d3ee] transition-all hover:bg-[#22d3ee]/10"
-            >
-              Download CV
-            </a>
-          </div>
-          <div className="mt-10 grid grid-cols-3 gap-6 max-w-lg">
-            {[
-              { n: certs, s: "3", l: "Certifications" },
-              { n: devices, s: "50+", l: "Devices Serviced" },
-              { n: cctvs, s: "77", l: "CCTV Installations" },
-            ].map((it, i) => (
-              <div key={i}>
-                <div className="text-2xl sm:text-3xl font-extrabold text-[#22d3ee] mono">
-                  {it.n}
-                  {it.s.endsWith("+") ? "+" : ""}
-                </div>
-                <div className="text-xs text-[#94a3b8] mt-1">{it.l}</div>
-              </div>
-            ))}
-          </div>
         </div>
-        <div className="relative rounded-[12px] border border-[#1e293b] bg-[#0f172a]/60 glow-cyan overflow-hidden">
-          <div className="mono text-[11px] text-[#94a3b8] px-4 pt-3 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#22d3ee] animate-pulse" />
-            network.topology · live
-          </div>
-          <NetworkCanvas />
+        <p className="mt-6 text-[#94a3b8] text-lg">
+          Building Reliable Networks · MikroTik & Cisco Certified
+          <br />
+          Network and Computer Engineering student
+        </p>
+        <p className="mt-5 text-[#94a3b8] max-w-2xl mx-auto leading-relaxed">
+          D4 Network & Computer Engineering student at Politeknik IDN Bogor with
+          dual vendor certifications (MTCNA · MTCRE · CCNA). Experienced in enterprise
+          routing, switching, and network security. Passionate about building efficient,
+          fault-tolerant network infrastructure.
+        </p>
+        <div className="mt-8 flex flex-wrap gap-3 justify-center">
+          <button
+            onClick={() =>
+              document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="inline-flex items-center gap-2 rounded-[8px] bg-[#22d3ee] px-5 py-3 text-sm font-semibold text-[#0b1120] transition-all hover:bg-[#67e8f9] hover:shadow-[0_0_28px_rgba(34,211,238,0.45)]"
+          >
+            → View My Projects
+          </button>
+          <a
+            href="/CV_Muhammad_Zharfan.pdf"
+            download
+            className="inline-flex items-center gap-2 rounded-[8px] border border-[#22d3ee] px-5 py-3 text-sm font-semibold text-[#22d3ee] transition-all hover:bg-[#22d3ee]/10"
+          >
+            Download CV
+          </a>
+        </div>
+        <div className="mt-10 grid grid-cols-2 gap-6 max-w-sm mx-auto">
+          {[
+            { n: certs, s: "9", l: "Certifications" },
+            { n: devices, s: "12+", l: "Projects" },
+          ].map((it, i) => (
+            <div key={i}>
+              <div className="text-2xl sm:text-3xl font-extrabold text-[#22d3ee] mono">
+                {it.n}
+                {it.s.endsWith("+") ? "+" : ""}
+              </div>
+              <div className="text-xs text-[#94a3b8] mt-1">{it.l}</div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -506,7 +403,7 @@ function About() {
           <div className="relative w-[240px] h-[240px] mx-auto md:mx-0 rounded-full p-[3px] bg-gradient-to-br from-[#22d3ee] to-[#3b82f6] glow-cyan-strong">
             <div className="w-full h-full rounded-full bg-[#111827] overflow-hidden flex items-center justify-center">
               <img
-                src="foto.jpeg"
+                src="/Profile.jpeg"
                 alt="Muhammad Zharfan"
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -514,7 +411,6 @@ function About() {
                 }}
               />
               <div className="absolute inset-0 flex items-center justify-center mono text-[#22d3ee] text-sm pointer-events-none">
-                foto.jpeg
               </div>
             </div>
           </div>
@@ -526,26 +422,15 @@ function About() {
             <br />
             with a Hands-On Foundation
           </SectionHeading>
-          <div className="mt-6 space-y-4 text-[#94a3b8] leading-relaxed">
+          <div className="mt-6 space-y-4 text-[#94a3b8] leading-relaxed text-justify">
             <p>
-              I'm Muhammad Zharfan, a Computer and Network Engineering student
-              currently enrolled at Politeknik IDN Bogor. My networking journey
-              started at SMKN 1 Balikpapan, where I built a strong foundation
-              in network systems and later earned dual MikroTik certifications
-              (MTCNA and MTCRE) and completed all three CCNA curriculum modules
-              through Cisco Networking Academy.
+             I'm Muhammad Zharfan, a Computer and Network Engineering student at Politeknik IDN Bogor with hands-on experience in enterprise networking, IT support, and technical training. I hold three industry certifications (MTCNA, MTCRE, and Cisco CCNA Academy) and enjoy building reliable network infrastructure using Cisco and MikroTik technologies.
             </p>
             <p>
-              I've gained real-world experience through an internship at
-              CV. Putra Mahkota Technology, where I handled LAN installation,
-              CCTV deployment, and hardware maintenance for business clients.
-              I also served as a Bootcamp Instructor delivering MTCRE curriculum,
-              helping participants achieve a 40% improvement in post-test scores.
+              During my internship, I assembled 15+ custom PCs, and participated in LAN infrastructure, IP CCTV deployment, and operating system installation across multiple client sites. I also served as a Bootcamp Instructor, mentoring 25 participants and helping improve their average post-test scores by 40% through hands-on networking labs.
             </p>
             <p>
-              My target roles are Network Engineer and NOC Engineer, where I can
-              apply my knowledge of routing protocols, switching, and network
-              monitoring in a production environment.
+              Beyond practical experience, I have authored an MTCNA study guide and developed 10 CCNA enterprise laboratory scenarios, reinforcing both my technical expertise and documentation skills. I am seeking opportunities as a Network Engineer or NOC Engineer, where I can contribute to building, maintaining, and troubleshooting reliable network infrastructures.
             </p>
           </div>
           <div className="mt-8 grid sm:grid-cols-2 gap-4">
@@ -582,8 +467,8 @@ const SKILL_GROUPS = [
     icon: "🌐",
     title: "Infrastructure & Routing",
     tags: [
-      "TCP/IP", "OSPF", "EIGRP", "RIP", "BGP (Basic)", "Static Routing",
-      "Dynamic Routing IPv6", "Subnetting", "VLSM", "GRE Tunneling", "MPLS",
+      "TCP/IP", "OSPF", "EIGRP", "RIP", "Static Routing",
+      "Dynamic Routing IPv6", "Subnetting", "VLSM", "GRE Tunneling",
       "VPN Tunneling", "QoS",
     ],
   },
@@ -660,28 +545,94 @@ function Skills() {
 
 const CERTS = [
   {
-    color: "#E53E3E",
-    title: "MikroTik MTCNA",
-    full: "MikroTik Certified Network Associate",
-    issuer: "MikroTik · Politeknik IDN",
-    year: "2025",
-    desc: "RouterOS fundamentals, wireless, basic routing, firewall, and troubleshooting.",
+    id: "ccna-ensa",
+    color: "#0EA5E9",
+    title: "Cisco CCNA: ENSA",
+    full: "Enterprise Networking, Security, and Automation",
+    issuer: "Cisco Networking Academy",
+    year: "2026",
+    desc: "Multi-area OSPF implementation, WAN architecture, network security hardening, QoS, and network automation fundamentals.",
+    image: "/certs/ccna-ensa.png",
   },
   {
+    id: "ccna-srwe",
+    color: "#16A34A",
+    title: "Cisco CCNA: SRWE",
+    full: "Switching, Routing, and Wireless Essentials",
+    issuer: "Cisco Networking Academy",
+    year: "2026",
+    desc: "VLAN segmentation, STP/RSTP topology, EtherChannel bundling, Inter-VLAN routing, DHCP, WLAN, and FHRP redundancy.",
+    image: "/certs/ccna-srwe.png",
+  },
+  {
+    id: "ccna-itn",
+    color: "#c52274",
+    title: "Cisco CCNA: ITN",
+    full: "Introduction to Networks",
+    issuer: "Cisco Networking Academy",
+    year: "2026",
+    desc: "Core networking fundamentals, OSI & TCP/IP stack analysis, IPv4/IPv6 subnetting, Ethernet switching, and CLI initialization.",
+    image: "/certs/ccna-itn.png",
+  },
+  {
+    id: "mtcre",
     color: "#3B82F6",
     title: "MikroTik MTCRE",
     full: "MikroTik Certified Routing Engineer",
     issuer: "ID-Networkers",
     year: "2025",
-    desc: "Advanced routing with OSPF, traffic engineering, complex multi-site network design.",
+    desc: "Advanced static/dynamic routing, single & multi-area OSPF design, site-to-site VPN tunnels, and traffic engineering.",
+    image: "/certs/mtcre.png",
   },
   {
-    color: "#22C55E",
-    title: "Cisco CCNA Curriculum",
-    full: "ITN · SRWE · ENSA (All 3 Modules)",
-    issuer: "Cisco Networking Academy",
-    year: "2026",
-    desc: "Enterprise networking, routing & switching, security fundamentals, automation basics.",
+    id: "mtcna",
+    color: "#E53E3E",
+    title: "MikroTik MTCNA",
+    full: "MikroTik Certified Network Associate",
+    issuer: "MikroTik · Politeknik IDN",
+    year: "2025",
+    desc: "RouterOS administration, wireless deployment, basic firewall filtering, NAT rules, queues, and network troubleshooting.",
+    image: "/certs/mtcna.png",
+  },
+  {
+    id: "internship-pmt",
+    color: "#F59E0B",
+    title: "Industrial Internship",
+    full: "CV. Putra Mahkota Technology Internship Certificate",
+    issuer: "CV. Putra Mahkota Technology",
+    year: "2024",
+    desc: "Hands-on experience in LAN infrastructure deployment, IP CCTV integration, hardware provisioning, and client maintenance.",
+    image: "/certs/magang-pmt.png",
+  },
+  {
+    id: "bnsp-network-support",
+    color: "#A855F7",
+    title: "BNSP Competency Standard",
+    full: "Certified Lead Network Support Technician",
+    issuer: "LSP · BNSP Indonesia",
+    year: "2025",
+    desc: "Certified technical proficiency in enterprise network installation, system maintenance, and operational troubleshooting.",
+    image: "/certs/bnsp-network.png",
+  },
+  {
+    id: "bnsp-computer-support",
+    color: "#55F7E1",
+    title: "BNSP Competency Standard",
+    full: "Certified Data Center Computer Support Specialist",
+    issuer: "LSP · BNSP Indonesia",
+    year: "2025",
+    desc: "Assessed technical capability in computer system maintenance, hardware diagnostics, and data center infrastructure support.",
+    image: "/certs/bnsp-computer.png",
+  },
+  {
+    id: "aguna-network-fundamental",
+    color: "#AECA32",
+    title: "Network Fundamentals",
+    full: "Aguna Course Network Fundamentals Certification",
+    issuer: "Aguna Course",
+    year: "2025",
+    desc: "Foundational networking concepts, IP addressing schemes, subnetting, and network layer operational fundamentals.",
+    image: "/certs/aguna-course.png",
   },
 ];
 
@@ -697,7 +648,7 @@ function Certifications() {
           {CERTS.map((c) => (
             <div
               key={c.title}
-              className="reveal group rounded-[12px] border border-[#1e293b] bg-[#111827] p-6 transition-all"
+              className="reveal group rounded-[12px] border border-[#1e293b] bg-[#111827] overflow-hidden transition-all"
               data-reveal
               style={{ ["--cc" as string]: c.color }}
               onMouseEnter={(e) => {
@@ -711,30 +662,32 @@ function Certifications() {
                 e.currentTarget.style.transform = "translateY(0)";
               }}
             >
-              <div
-                className="w-14 h-14 rounded-[12px] flex items-center justify-center mb-5"
-                style={{ background: `${c.color}22`, border: `1px solid ${c.color}55` }}
-              >
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={c.color} strokeWidth="2">
-                  <rect x="3" y="4" width="18" height="12" rx="2" />
-                  <path d="M7 20h10M12 16v4" />
-                  <circle cx="8" cy="10" r="1.2" fill={c.color} />
-                  <circle cx="12" cy="10" r="1.2" fill={c.color} />
-                  <circle cx="16" cy="10" r="1.2" fill={c.color} />
-                </svg>
+              <UploadableImage
+                storageKey={`cert-${c.id}`}
+                aspect="4/3"
+                label="Upload foto sertifikat"
+                color={c.color}
+              />
+              <div className="p-6">
+                <div
+                  className="w-14 h-14 rounded-[12px] flex items-center justify-center mb-5"
+                  style={{ background: `${c.color}22`, border: `1px solid ${c.color}55` }}
+                >
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={c.color} strokeWidth="2">
+                    <rect x="3" y="4" width="18" height="12" rx="2" />
+                    <path d="M7 20h10M12 16v4" />
+                    <circle cx="8" cy="10" r="1.2" fill={c.color} />
+                    <circle cx="12" cy="10" r="1.2" fill={c.color} />
+                    <circle cx="16" cy="10" r="1.2" fill={c.color} />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-[#f1f5f9]">{c.title}</h3>
+                <div className="text-sm text-[#94a3b8] mt-1">{c.full}</div>
+                <div className="mono text-[11px] text-[#94a3b8] mt-3">
+                  {c.issuer} · {c.year}
+                </div>
+                <p className="text-sm text-[#94a3b8] mt-4 leading-relaxed">{c.desc}</p>
               </div>
-              <h3 className="text-lg font-bold text-[#f1f5f9]">{c.title}</h3>
-              <div className="text-sm text-[#94a3b8] mt-1">{c.full}</div>
-              <div className="mono text-[11px] text-[#94a3b8] mt-3">
-                {c.issuer} · {c.year}
-              </div>
-              <p className="text-sm text-[#94a3b8] mt-4 leading-relaxed">{c.desc}</p>
-              <button
-                className="mt-5 inline-flex items-center gap-2 text-sm font-semibold"
-                style={{ color: c.color }}
-              >
-                View Certificate →
-              </button>
             </div>
           ))}
         </div>
@@ -747,58 +700,193 @@ function Certifications() {
 
 const PROJECTS = [
   {
+    id: "p1",
+    color: "#F97316",
+    name: "ISP Backbone MPLS & Route Redistribution (Multi-Vendor)",
+    desc: "Implemented a multi-vendor core backbone lab configuring MPLS topology and complex route redistribution between Cisco IOS and MikroTik RouterOS.",
+    tags: ["MPLS", "Label Switching", "Redistribution", "OSPF", "BGP", "Multi-Vendor"],
+    tool: "PuTTY (Cisco CLI) · Winbox (MikroTik)",
+    details: "Constructed an MPLS core using a hybrid setup (2x Cisco Switches as PE/P routers and 1x MikroTik Router as CE/PE). Configured LDP, established BGP VPNv4 peering, and performed metric-aware route redistribution between dynamic protocols for seamless core-to-edge connectivity."
+  },
+  {
+    id: "p2",
+    color: "#A855F7",
+    name: "FTTH Infrastructure & HTB Bandwidth Management (RT/RW Net)",
+    desc: "Deployed and managed a small-scale FTTH community network serving multiple clients, featuring Fiber Media Converters and advanced HTB traffic shaping.",
+    tags: ["FTTH", "Traffic Shaping (HTB)", "QoS", "Bandwidth Management", "Network Monitoring"],
+    tool: "MikroTik Winbox · The Dude · FTTx Hardware",
+    details: "Built an end-to-end FTTH network utilizing 3 FTTH Media Converters (HTB) for client access. Implemented Hierarchical Token Bucket (HTB) for precise QoS per client, and deployed MikroTik The Dude for real-time latency and uptime monitoring."
+  },
+  {
+    id: "p3",
+    color: "#14B8A6",
+    name: "Server Room CCTV & L2 Access Provisioning",
+    desc: "Provisioned Layer 2 switches and deployed batch IP CCTV cameras within a server room environment for multi-floor surveillance.",
+    tags: ["Layer 2 Switching", "VLAN Provisioning", "IP Addressing", "SADP", "Physical Security"],
+    tool: "SADP (Hikvision) · Real Hardware · L2 Switches",
+    details: "Configured switch port access, designated CCTV VLANs, and utilized SADP for batch IP address allocation and activation of network cameras to ensure stable video feeds to the central NVR."
+  },
+    {
+    id: "p4",
+    color: "#EC4899",
+    name: "Hardware Maintenance & Peripheral Troubleshooting",
+    desc: "Performed hardware diagnostic, mechanical repair, and network connectivity configuration for enterprise printing units.",
+    tags: ["Hardware Diagnostics", "Preventive Maintenance", "Peripheral Connectivity"],
+    tool: "Diagnostic Kits · Hardware Tools",
+    details: "Diagnosed hardware faults, replaced mechanical components, updated system drivers/firmware, and verified network availability for shared office peripherals."
+  },
+ {
+    id: "p5",
     color: "#3B82F6",
-    name: "Multi-Area OSPF Campus Network",
-    desc: "Designed and implemented a large-scale multi-site campus topology using OSPF multi-area, covering 10+ CCNA-level topics in a single SuperLab.",
-    tags: ["OSPF", "Multi-Area", "EIGRP", "GRE Tunnel", "NAT/PAT", "EtherChannel", "VTP", "HSRP", "Port Security"],
+    name: "PT. HAMBALI GROUP — Enterprise Corporate Network",
+    desc: "Designed an enterprise multi-department network topology for PT. Hambali Group featuring OSPF Multi-Area, HSRP redundancy, and L2/L3 security controls.",
+    tags: [
+      "ROAS",
+      "SVI",
+      "HSRP",
+      "VTP",
+      "STP",
+      "DHCP",
+      "OSPF Multi-Area",
+      "VLAN Trunking",
+      "Port-Security",
+      "EtherChannel",
+      "SSH"
+    ],
     tool: "Cisco Packet Tracer",
-    details:
-      "SuperLab includes multi-area OSPF design, redistribution between EIGRP and OSPF, GRE tunneling between sites, NAT/PAT for internet edge, EtherChannel bundles between distribution/access, VTP domain propagation, HSRP first-hop redundancy, and Port Security on access ports.",
-  },
-  {
+    details: "Enterprise network topology for PT. Hambali Group featuring OSPF Multi-Area (Area 0 & 1), HSRP gateway redundancy, EtherChannel link aggregation for Data Center servers, VTP/VLAN segmentation across departments, DHCP services, Port-Security, and SSH management."
+  },{
+    id: "p6",
     color: "#E53E3E",
-    name: "MikroTik MTCRE Lab — Advanced Routing",
-    desc: "Built MTCRE exam-level lab scenarios covering OSPF on MikroTik, multi-path routing, traffic engineering, and tunnel configurations.",
-    tags: ["MikroTik RouterOS", "OSPF", "GRE", "Policy Routing", "Traffic Engineering"],
-    tool: "Winbox · Pnetlab",
-    details:
-      "MTCRE-focused lab: OSPF areas & virtual-link, ECMP and route selection, mangle-based policy routing, GRE + IPIP tunnels, and OSPF over tunnel scenarios simulated in Pnetlab.",
-  },
-  {
-    color: "#8B5CF6",
-    name: "Enterprise WAN & VLAN Topology",
-    desc: "Multi-ISP WAN design with VLAN segmentation for different departments, QoS implementation, and network security policies.",
-    tags: ["VLAN", "Inter-VLAN Routing", "NAT", "ACL", "QoS", "Firewall"],
-    tool: "Cisco Packet Tracer · GNS3",
-    details:
-      "Dual-ISP edge with failover, VLAN-per-department segmentation, inter-VLAN routing on L3 switch, extended ACLs for east-west traffic control, and QoS classification/marking for VoIP.",
-  },
-  {
-    color: "#22C55E",
-    name: 'CCNA Study Module — "Sahabat Superlab"',
-    desc: "Authored a comprehensive CCNA study module covering 10 lab scenarios including VLAN, STP, OSPF, EIGRP, EtherChannel, ACL, NAT, and DHCP — used as final-semester academic material.",
-    tags: ["VLAN", "STP", "OSPF", "EIGRP", "ACL", "NAT", "DHCP", "Documentation"],
+    name: "PT. SINAR MAKMUR — Multi-Area OSPF & Multi-Site Corporate Network",
+    desc: "Designed an enterprise multi-site network topology for PT. Sinar Makmur featuring 3-Area OSPF routing, Internet WAN gateway, DHCP Relay, and Wireless LAN integration.",
+    tags: [
+      "SVI",
+      "VTP",
+      "VLAN Trunking",
+      "STP",
+      "DHCP Server & Relay",
+      "OSPF Multi-Area",
+      "Wireless LAN",
+      "EtherChannel",
+      "Static Route"
+    ],
     tool: "Cisco Packet Tracer",
-    details:
-      "Ten lab chapters with step-by-step configuration, verification commands, and expected outputs. Adopted as final-semester academic material.",
+    details: "Multi-site enterprise topology for PT. Sinar Makmur featuring 3-Area OSPF routing (Area 0, 1, 2), Static Routing to WAN/Google.com, central Data Center servers, DHCP Relay for remote clients, EtherChannel, and integrated Wireless Access Points."
+  },{
+    id: "p7",
+    color: "#8B5CF6",
+    name: "WARNET SANJAYA MAKMUR — Hybrid Routing & Redistribution Network",
+    desc: "Designed an enterprise network topology for Warnet Sanjaya Makmur featuring hybrid routing (EIGRP & OSPF), route redistribution, and custom Allowed Trunking.",
+    tags: [
+      "EIGRP",
+      "OSPF",
+      "Route Redistribution",
+      "Allowed Trunk",
+      "SVI",
+      "EtherChannel",
+      "Wireless LAN",
+      "Telnet",
+      "DHCP"
+    ],
+    tool: "Cisco Packet Tracer",
+    details: "Multi-branch hybrid topology for Warnet Sanjaya Makmur connecting EIGRP and OSPF routing domains via central Route Redistribution, featuring Allowed Trunking security, EtherChannel link aggregation, Wireless Access Points, SVI routing, and Telnet remote management."
   },
   {
+    id: "p8",
+    color: "#0EA5E9",
+    name: "NASIR CORPORATION — Centralized EIGRP Infrastructure",
+    desc: "Designed a centralized enterprise network topology for Nasir Corporation featuring EIGRP routing backbone, dedicated DNS/Web servers, and Inter-VLAN routing.",
+    tags: [
+      "EIGRP",
+      "SVI",
+      "Inter-VLAN Routing",
+      "VLAN Trunking",
+      "VTP",
+      "STP",
+      "DHCP",
+      "DNS & Web Server",
+      "SSH"
+    ],
+    tool: "Cisco Packet Tracer",
+    details: "Centralized enterprise topology for Nasir Corporation featuring EIGRP backbone routing centered on R-Utama, dedicated DNS and Web Server infrastructure, L3 SVI Inter-VLAN routing, VTP/STP management, DHCP distribution, and SSH remote management."
+  },
+{
+    id: "p9",
+    color: "#22C55E",
+    name: "PT. INDAH MULIA — EIGRP Backbone & HSRP Redundancy Network",
+    desc: "Designed an enterprise network topology for PT. Indah Mulia featuring EIGRP backbone routing, HSRP gateway redundancy, and Data Center EtherChannel bundling.",
+    tags: [
+      "EIGRP",
+      "HSRP",
+      "SVI",
+      "EtherChannel",
+      "Wireless LAN",
+      "VLAN Trunking",
+      "Port-Security",
+      "VTP",
+      "STP",
+      "DHCP"
+    ],
+    tool: "Cisco Packet Tracer",
+    details: "Enterprise network topology for PT. Indah Mulia built on EIGRP 10 backbone routing, HSRP gateway redundancy across core switches, EtherChannel link aggregation for Data Center servers, Wireless Access Points, VTP/STP management, DHCP services, and Port-Security."
+  },
+{
+    id: "p10",
     color: "#F59E0B",
-    name: "MTCNA Reference Book",
-    desc: 'Wrote a MikroTik reference book titled "Basics of Computer Network Science" containing theory, basic MikroTik configuration guides, and lab exercises.',
-    tags: ["MikroTik", "RouterOS", "Documentation", "Technical Writing"],
-    tool: "Winbox · Written Material",
-    details:
-      "Covers OSI/TCP-IP foundations, RouterOS interface, IP addressing, firewall chain fundamentals, wireless, and end-of-chapter lab exercises.",
+    name: "POLITEKNIK INDAH MULIA — Multi-Area OSPF Campus Infrastructure",
+    desc: "Designed a multi-department campus network topology for Politeknik Indah Mulia featuring Multi-Area OSPF, extensive VLAN segmentation, and dedicated campus servers.",
+    tags: [
+      "OSPF Multi-Area",
+      "Inter-VLAN Routing",
+      "SVI",
+      "Wireless LAN",
+      "DNS & Web Server",
+      "EtherChannel",
+      "VLAN Trunking",
+      "VTP",
+      "STP",
+      "DHCP"
+    ],
+    tool: "Cisco Packet Tracer",
+    details: "Large-scale campus network topology for Politeknik Indah Mulia using OSPF Multi-Area (Area 0 & 1) connecting academic units, integrated Wireless Access Points, 10+ department VLAN segments, SVI Inter-VLAN routing, and centralized DNS/Web Server infrastructure."
   },
   {
+    id: "p11",
     color: "#06B6D4",
-    name: "CCTV & LAN Infrastructure Deployment",
-    desc: "Installed and configured 77 CCTV units and LAN networks for business clients during internship. Handled IP configuration, cable management, and device documentation.",
-    tags: ["CCTV Setup", "LAN Installation", "IP Configuration", "Network Cabling"],
-    tool: "Real Hardware · IP Camera Systems",
-    details:
-      "End-to-end deployment: site survey, cable pulling and termination, PoE switch provisioning, NVR configuration, static IP allocation, and per-site documentation binders.",
+    name: "PT NUSANET EDUKASI INDONESIA — Multi-Site OSPF Infrastructure",
+    desc: "Designed a multi-site network topology for PT Nusanet Edukasi Indonesia featuring OSPF Multi-Area routing, central server farm, and L2 Port-Security.",
+    tags: [
+      "OSPF Multi-Area",
+      "Inter-VLAN Routing",
+      "SVI",
+      "Port-Security",
+      "Wireless LAN",
+      "DNS & Web Server",
+      "VTP",
+      "STP",
+      "DHCP"
+    ],
+    tool: "Cisco Packet Tracer",
+    details: "Multi-site enterprise topology for PT Nusanet Edukasi Indonesia connecting Head Office and Branch sites using OSPF Multi-Area (Area 0 & 1), centralized DNS and Web Server infrastructure, SVI Inter-VLAN routing, Wireless Access Points, and access-port Port-Security."
+  },{
+    id: "p12",
+    color: "#84CC16",
+    name: "PT ANTON STORE — Enterprise Site-to-Site Tunnel & NAT Network",
+    desc: "Designed a secure multi-site enterprise network for PT Anton Store utilizing GRE Tunnel across WAN, dual-domain EIGRP routing, and NAT translation.",
+    tags: [
+      "GRE Tunnel",
+      "NAT",
+      "EIGRP",
+      "SVI",
+      "VLAN Trunking",
+      "DNS & Web Server",
+      "VTP",
+      "STP",
+      "DHCP"
+    ],
+    tool: "Cisco Packet Tracer",
+    details: "Site-to-site enterprise topology for PT Anton Store connecting Kantor-1 and Kantor-2 via GRE Tunnel across simulated WAN, featuring isolated EIGRP 10 & 20 routing domains, Network Address Translation (NAT), central DNS/Web Server farm, and SVI VLAN management."
   },
 ];
 
@@ -813,6 +901,12 @@ function ProjectCard({ p }: { p: (typeof PROJECTS)[number] }) {
       onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
     >
       <div className="h-1.5" style={{ background: p.color }} />
+      <UploadableImage
+        storageKey={`proj-${p.id}`}
+        aspect="16/10"
+        label="Upload foto proyek"
+        color={p.color}
+      />
       <div className="p-6">
         <h3 className="text-lg font-bold text-[#f1f5f9]">{p.name}</h3>
         <p className="text-sm text-[#94a3b8] mt-3 leading-relaxed">{p.desc}</p>
