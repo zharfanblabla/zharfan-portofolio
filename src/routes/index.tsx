@@ -542,7 +542,6 @@ function Skills() {
 }
 
 /* ---------------- Certifications ---------------- */
-
 const CERTS = [
   {
     id: "ccna-ensa",
@@ -552,7 +551,7 @@ const CERTS = [
     issuer: "Cisco Networking Academy",
     year: "2026",
     desc: "Multi-area OSPF implementation, WAN architecture, network security hardening, QoS, and network automation fundamentals.",
-    image: "/certs/ccna-ensa.jpeg",
+    image: "/Certificate/CCNA ENSA Certificate.jpg",
   },
   {
     id: "ccna-srwe",
@@ -562,7 +561,7 @@ const CERTS = [
     issuer: "Cisco Networking Academy",
     year: "2026",
     desc: "VLAN segmentation, STP/RSTP topology, EtherChannel bundling, Inter-VLAN routing, DHCP, WLAN, and FHRP redundancy.",
-    image: "/Certificate/CCNA ENSA Certificate.jpg",
+    image: "/Certificate/CCNA SRWE Certificate.jpg",
   },
   {
     id: "ccna-itn",
@@ -572,7 +571,7 @@ const CERTS = [
     issuer: "Cisco Networking Academy",
     year: "2026",
     desc: "Core networking fundamentals, OSI & TCP/IP stack analysis, IPv4/IPv6 subnetting, Ethernet switching, and CLI initialization.",
-    image: "/certs/ccna-itn.png",
+    image: "/Certificate/CCNA ITN Certificate.jpg",
   },
   {
     id: "mtcre",
@@ -582,7 +581,7 @@ const CERTS = [
     issuer: "ID-Networkers",
     year: "2025",
     desc: "Advanced static/dynamic routing, single & multi-area OSPF design, site-to-site VPN tunnels, and traffic engineering.",
-    image: "/certs/mtcre.png",
+    image: "/Certificate/MTCRE.jpg",
   },
   {
     id: "mtcna",
@@ -592,7 +591,7 @@ const CERTS = [
     issuer: "MikroTik · Politeknik IDN",
     year: "2025",
     desc: "RouterOS administration, wireless deployment, basic firewall filtering, NAT rules, queues, and network troubleshooting.",
-    image: "/certs/mtcna.png",
+    image: "/Certificate/MTCNA.jpg",
   },
   {
     id: "internship-pmt",
@@ -602,7 +601,7 @@ const CERTS = [
     issuer: "CV. Putra Mahkota Technology",
     year: "2024",
     desc: "Hands-on experience in LAN infrastructure deployment, IP CCTV integration, hardware provisioning, and client maintenance.",
-    image: "/certs/magang-pmt.png",
+    image: "/Certificate/Sertifikat Magang.jpeg",
   },
   {
     id: "bnsp-network-support",
@@ -612,7 +611,7 @@ const CERTS = [
     issuer: "LSP · BNSP Indonesia",
     year: "2025",
     desc: "Certified technical proficiency in enterprise network installation, system maintenance, and operational troubleshooting.",
-    image: "/certs/bnsp-network.png",
+    image: "/Certificate/BNSP Technical Support.jpg",
   },
   {
     id: "bnsp-computer-support",
@@ -622,7 +621,7 @@ const CERTS = [
     issuer: "LSP · BNSP Indonesia",
     year: "2025",
     desc: "Assessed technical capability in computer system maintenance, hardware diagnostics, and data center infrastructure support.",
-    image: "/certs/bnsp-computer.png",
+    image: "/Certificate/BNSP Support Pusat Data.jpg",
   },
   {
     id: "aguna-network-fundamental",
@@ -632,7 +631,7 @@ const CERTS = [
     issuer: "Aguna Course",
     year: "2025",
     desc: "Foundational networking concepts, IP addressing schemes, subnetting, and network layer operational fundamentals.",
-    image: "/certs/aguna-course.png",
+    image: "/Certificate/Aguna Course Certificate.jpg",
   },
 ];
 
@@ -647,7 +646,7 @@ function Certifications() {
         <div className="mt-12 grid md:grid-cols-3 gap-6">
           {CERTS.map((c) => (
             <div
-              key={c.title}
+              key={c.id}
               className="reveal group rounded-[12px] border border-[#1e293b] bg-[#111827] overflow-hidden transition-all"
               data-reveal
               style={{ ["--cc" as string]: c.color }}
@@ -662,12 +661,13 @@ function Certifications() {
                 e.currentTarget.style.transform = "translateY(0)";
               }}
             >
-              <UploadableImage
-                storageKey={`cert-${c.id}`}
-                aspect="4/3"
-                label="Upload foto sertifikat"
-                color={c.color}
-              />
+              <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#0f172a]">
+                <img
+                  src={c.image}
+                  alt={c.title}
+                  className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
               <div className="p-6">
                 <div
                   className="w-14 h-14 rounded-[12px] flex items-center justify-center mb-5"
@@ -695,9 +695,7 @@ function Certifications() {
     </section>
   );
 }
-
 /* ---------------- Projects ---------------- */
-
 const PROJECTS = [
   {
     id: "p1",
@@ -706,7 +704,8 @@ const PROJECTS = [
     desc: "Implemented a multi-vendor core backbone lab configuring MPLS topology and complex route redistribution between Cisco IOS and MikroTik RouterOS.",
     tags: ["MPLS", "Label Switching", "Redistribution", "OSPF", "BGP", "Multi-Vendor"],
     tool: "PuTTY (Cisco CLI) · Winbox (MikroTik)",
-    details: "Constructed an MPLS core using a hybrid setup (2x Cisco Switches as PE/P routers and 1x MikroTik Router as CE/PE). Configured LDP, established BGP VPNv4 peering, and performed metric-aware route redistribution between dynamic protocols for seamless core-to-edge connectivity."
+    details: "Constructed an MPLS core using a hybrid setup (2x Cisco Switches as PE/P routers and 1x MikroTik Router as CE/PE). Configured LDP, established BGP VPNv4 peering, and performed metric-aware route redistribution between dynamic protocols for seamless core-to-edge connectivity.",
+    image: "/Project/ISP Backbone.jpeg"
   },
   {
     id: "p2",
@@ -715,7 +714,8 @@ const PROJECTS = [
     desc: "Deployed and managed a small-scale FTTH community network serving multiple clients, featuring Fiber Media Converters and advanced HTB traffic shaping.",
     tags: ["FTTH", "Traffic Shaping (HTB)", "QoS", "Bandwidth Management", "Network Monitoring"],
     tool: "MikroTik Winbox · The Dude · FTTx Hardware",
-    details: "Built an end-to-end FTTH network utilizing 3 FTTH Media Converters (HTB) for client access. Implemented Hierarchical Token Bucket (HTB) for precise QoS per client, and deployed MikroTik The Dude for real-time latency and uptime monitoring."
+    details: "Built an end-to-end FTTH network utilizing 3 FTTH Media Converters (HTB) for client access. Implemented Hierarchical Token Bucket (HTB) for precise QoS per client, and deployed MikroTik The Dude for real-time latency and uptime monitoring.",
+    image: "/Project/FTTH RT RT Net.jpeg"
   },
   {
     id: "p3",
@@ -724,18 +724,20 @@ const PROJECTS = [
     desc: "Provisioned Layer 2 switches and deployed batch IP CCTV cameras within a server room environment for multi-floor surveillance.",
     tags: ["Layer 2 Switching", "VLAN Provisioning", "IP Addressing", "SADP", "Physical Security"],
     tool: "SADP (Hikvision) · Real Hardware · L2 Switches",
-    details: "Configured switch port access, designated CCTV VLANs, and utilized SADP for batch IP address allocation and activation of network cameras to ensure stable video feeds to the central NVR."
+    details: "Configured switch port access, designated CCTV VLANs, and utilized SADP for batch IP address allocation and activation of network cameras to ensure stable video feeds to the central NVR.",
+    image: "/Project/CCTV Room.jpeg"
   },
-    {
+  {
     id: "p4",
     color: "#EC4899",
     name: "Hardware Maintenance & Peripheral Troubleshooting",
     desc: "Performed hardware diagnostic, mechanical repair, and network connectivity configuration for enterprise printing units.",
     tags: ["Hardware Diagnostics", "Preventive Maintenance", "Peripheral Connectivity"],
     tool: "Diagnostic Kits · Hardware Tools",
-    details: "Diagnosed hardware faults, replaced mechanical components, updated system drivers/firmware, and verified network availability for shared office peripherals."
+    details: "Diagnosed hardware faults, replaced mechanical components, updated system drivers/firmware, and verified network availability for shared office peripherals.",
+    image: "/Project/Hardware Maintenance.jpeg"
   },
- {
+  {
     id: "p5",
     color: "#3B82F6",
     name: "PT. HAMBALI GROUP — Enterprise Corporate Network",
@@ -754,8 +756,10 @@ const PROJECTS = [
       "SSH"
     ],
     tool: "Cisco Packet Tracer",
-    details: "Enterprise network topology for PT. Hambali Group featuring OSPF Multi-Area (Area 0 & 1), HSRP gateway redundancy, EtherChannel link aggregation for Data Center servers, VTP/VLAN segmentation across departments, DHCP services, Port-Security, and SSH management."
-  },{
+    details: "Enterprise network topology for PT. Hambali Group featuring OSPF Multi-Area (Area 0 & 1), HSRP gateway redundancy, EtherChannel link aggregation for Data Center servers, VTP/VLAN segmentation across departments, DHCP services, Port-Security, and SSH management.",
+    image: "/Project/PT Hambali.png"
+  },
+  {
     id: "p6",
     color: "#E53E3E",
     name: "PT. SINAR MAKMUR — Multi-Area OSPF & Multi-Site Corporate Network",
@@ -772,8 +776,10 @@ const PROJECTS = [
       "Static Route"
     ],
     tool: "Cisco Packet Tracer",
-    details: "Multi-site enterprise topology for PT. Sinar Makmur featuring 3-Area OSPF routing (Area 0, 1, 2), Static Routing to WAN/Google.com, central Data Center servers, DHCP Relay for remote clients, EtherChannel, and integrated Wireless Access Points."
-  },{
+    details: "Multi-site enterprise topology for PT. Sinar Makmur featuring 3-Area OSPF routing (Area 0, 1, 2), Static Routing to WAN/Google.com, central Data Center servers, DHCP Relay for remote clients, EtherChannel, and integrated Wireless Access Points.",
+    image: "/Project/PT Sinar Makmur.png"
+  },
+  {
     id: "p7",
     color: "#8B5CF6",
     name: "WARNET SANJAYA MAKMUR — Hybrid Routing & Redistribution Network",
@@ -790,7 +796,8 @@ const PROJECTS = [
       "DHCP"
     ],
     tool: "Cisco Packet Tracer",
-    details: "Multi-branch hybrid topology for Warnet Sanjaya Makmur connecting EIGRP and OSPF routing domains via central Route Redistribution, featuring Allowed Trunking security, EtherChannel link aggregation, Wireless Access Points, SVI routing, and Telnet remote management."
+    details: "Multi-branch hybrid topology for Warnet Sanjaya Makmur connecting EIGRP and OSPF routing domains via central Route Redistribution, featuring Allowed Trunking security, EtherChannel link aggregation, Wireless Access Points, SVI routing, and Telnet remote management.",
+    image: "/Project/Warnet Sanjaya.png"
   },
   {
     id: "p8",
@@ -809,9 +816,10 @@ const PROJECTS = [
       "SSH"
     ],
     tool: "Cisco Packet Tracer",
-    details: "Centralized enterprise topology for Nasir Corporation featuring EIGRP backbone routing centered on R-Utama, dedicated DNS and Web Server infrastructure, L3 SVI Inter-VLAN routing, VTP/STP management, DHCP distribution, and SSH remote management."
+    details: "Centralized enterprise topology for Nasir Corporation featuring EIGRP backbone routing centered on R-Utama, dedicated DNS and Web Server infrastructure, L3 SVI Inter-VLAN routing, VTP/STP management, DHCP distribution, and SSH remote management.",
+    image: "/Project/Nasir Corporation.png"
   },
-{
+  {
     id: "p9",
     color: "#22C55E",
     name: "PT. INDAH MULIA — EIGRP Backbone & HSRP Redundancy Network",
@@ -829,9 +837,10 @@ const PROJECTS = [
       "DHCP"
     ],
     tool: "Cisco Packet Tracer",
-    details: "Enterprise network topology for PT. Indah Mulia built on EIGRP 10 backbone routing, HSRP gateway redundancy across core switches, EtherChannel link aggregation for Data Center servers, Wireless Access Points, VTP/STP management, DHCP services, and Port-Security."
+    details: "Enterprise network topology for PT. Indah Mulia built on EIGRP 10 backbone routing, HSRP gateway redundancy across core switches, EtherChannel link aggregation for Data Center servers, Wireless Access Points, VTP/STP management, DHCP services, and Port-Security.",
+    image: "/Project/PT Indah Mulia.png"
   },
-{
+  {
     id: "p10",
     color: "#F59E0B",
     name: "POLITEKNIK INDAH MULIA — Multi-Area OSPF Campus Infrastructure",
@@ -849,7 +858,8 @@ const PROJECTS = [
       "DHCP"
     ],
     tool: "Cisco Packet Tracer",
-    details: "Large-scale campus network topology for Politeknik Indah Mulia using OSPF Multi-Area (Area 0 & 1) connecting academic units, integrated Wireless Access Points, 10+ department VLAN segments, SVI Inter-VLAN routing, and centralized DNS/Web Server infrastructure."
+    details: "Large-scale campus network topology for Politeknik Indah Mulia using OSPF Multi-Area (Area 0 & 1) connecting academic units, integrated Wireless Access Points, 10+ department VLAN segments, SVI Inter-VLAN routing, and centralized DNS/Web Server infrastructure.",
+    image: "/Project/Politeknik Indah Mulia.png"
   },
   {
     id: "p11",
@@ -868,8 +878,10 @@ const PROJECTS = [
       "DHCP"
     ],
     tool: "Cisco Packet Tracer",
-    details: "Multi-site enterprise topology for PT Nusanet Edukasi Indonesia connecting Head Office and Branch sites using OSPF Multi-Area (Area 0 & 1), centralized DNS and Web Server infrastructure, SVI Inter-VLAN routing, Wireless Access Points, and access-port Port-Security."
-  },{
+    details: "Multi-site enterprise topology for PT Nusanet Edukasi Indonesia connecting Head Office and Branch sites using OSPF Multi-Area (Area 0 & 1), centralized DNS and Web Server infrastructure, SVI Inter-VLAN routing, Wireless Access Points, and access-port Port-Security.",
+    image: "/Project/PT Nusanet.png"
+  },
+  {
     id: "p12",
     color: "#84CC16",
     name: "PT ANTON STORE — Enterprise Site-to-Site Tunnel & NAT Network",
@@ -886,7 +898,8 @@ const PROJECTS = [
       "DHCP"
     ],
     tool: "Cisco Packet Tracer",
-    details: "Site-to-site enterprise topology for PT Anton Store connecting Kantor-1 and Kantor-2 via GRE Tunnel across simulated WAN, featuring isolated EIGRP 10 & 20 routing domains, Network Address Translation (NAT), central DNS/Web Server farm, and SVI VLAN management."
+    details: "Site-to-site enterprise topology for PT Anton Store connecting Kantor-1 and Kantor-2 via GRE Tunnel across simulated WAN, featuring isolated EIGRP 10 & 20 routing domains, Network Address Translation (NAT), central DNS/Web Server farm, and SVI VLAN management.",
+    image: "/Project/PT Anton Store.png"
   },
 ];
 
@@ -901,12 +914,13 @@ function ProjectCard({ p }: { p: (typeof PROJECTS)[number] }) {
       onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
     >
       <div className="h-1.5" style={{ background: p.color }} />
-      <UploadableImage
-        storageKey={`proj-${p.id}`}
-        aspect="16/10"
-        label="Upload foto proyek"
-        color={p.color}
-      />
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#0f172a]">
+        <img
+          src={p.image}
+          alt={p.name}
+          className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+        />
+      </div>
       <div className="p-6">
         <h3 className="text-lg font-bold text-[#f1f5f9]">{p.name}</h3>
         <p className="text-sm text-[#94a3b8] mt-3 leading-relaxed">{p.desc}</p>
@@ -954,7 +968,7 @@ function Projects() {
         </div>
         <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {PROJECTS.map((p) => (
-            <ProjectCard key={p.name} p={p} />
+            <ProjectCard key={p.id} p={p} />
           ))}
         </div>
       </div>
