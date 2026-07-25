@@ -87,8 +87,7 @@ function Nav() {
     setOpen(false);
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
-
-  return (
+return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
         scrolled
@@ -119,13 +118,13 @@ function Nav() {
           ))}
         </nav>
         <div className="flex items-center gap-3">
-          <a
-            href="/CV Muhammad Zharfan Tashbir.pdf"
-            download
-            className="hidden sm:inline-flex items-center gap-2 rounded-[8px] bg-[#22d3ee] px-4 py-2 text-sm font-semibold text-[#0b1120] transition-all hover:bg-[#67e8f9] hover:shadow-[0_0_20px_rgba(34,211,238,0.4)]"
-          >
-            Download CV
-          </a>
+          {/* Tombol Download CV (Desktop) */}<a
+  href="/CV_Muhammad_Zharfan_Tashbir.pdf"
+  download="CV_Muhammad_Zharfan_Tashbir.pdf"
+  className="hidden sm:inline-flex items-center gap-2 rounded-[8px] bg-[#22d3ee] px-4 py-2 text-sm font-semibold text-[#0b1120] transition-all hover:bg-[#67e8f9] hover:shadow-[0_0_20px_rgba(34,211,238,0.4)]"
+>
+  Download CV
+</a>
           <button
             onClick={() => setOpen((v) => !v)}
             className="lg:hidden text-[#f1f5f9] p-2"
@@ -150,7 +149,10 @@ function Nav() {
             {NAV.map((n) => (
               <button
                 key={n.id}
-                onClick={() => scrollTo(n.id)}
+                onClick={() => {
+                  scrollTo(n.id);
+                  setOpen(false);
+                }}
                 className={`py-3 text-left text-sm ${
                   active === n.id ? "text-[#22d3ee]" : "text-[#f1f5f9]"
                 }`}
@@ -158,9 +160,12 @@ function Nav() {
                 {n.label}
               </button>
             ))}
+            {/* Tombol Download CV (Mobile Dropdown) */}
             <a
-              href="/CV_Muhammad_Zharfan.pdf"
-              download
+              href="/CV Muhammad Zharfan Tashbir.pdf"
+              download="CV Muhammad Zharfan Tashbir.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
               className="mt-2 inline-flex items-center justify-center rounded-[8px] bg-[#22d3ee] px-4 py-2 text-sm font-semibold text-[#0b1120]"
             >
               Download CV
@@ -348,14 +353,13 @@ function Hero() {
             className="inline-flex items-center gap-2 rounded-[8px] bg-[#22d3ee] px-5 py-3 text-sm font-semibold text-[#0b1120] transition-all hover:bg-[#67e8f9] hover:shadow-[0_0_28px_rgba(34,211,238,0.45)]"
           >
             → View My Projects
-          </button>
-          <a
-            href="/CV Muhammad Zharfan Tahbir.pdf"
-            download
-            className="inline-flex items-center gap-2 rounded-[8px] border border-[#22d3ee] px-5 py-3 text-sm font-semibold text-[#22d3ee] transition-all hover:bg-[#22d3ee]/10"
-          >
-            Download CV
-          </a>
+          </button><a
+  href="/CV_Muhammad_Zharfan_Tashbir.pdf"
+  download
+  className="inline-flex items-center gap-2 rounded-[8px] border border-[#22d3ee] px-5 py-3 text-sm font-semibold text-[#22d3ee] transition-all hover:bg-[#22d3ee]/10"
+>
+  Download CV
+</a>
         </div>
         <div className="mt-10 grid grid-cols-2 gap-6 max-w-sm mx-auto">
           {[
