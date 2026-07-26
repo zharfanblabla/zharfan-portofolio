@@ -1140,7 +1140,7 @@ function Toast({ show, onDone }: { show: boolean; onDone: () => void }) {
 
 const CONTACT_ITEMS = [
   { i: "📱", l: "Phone / WhatsApp", v: "+62 858-1472-0186", href: "https://wa.me/6285814720186" },
-  { i: "📧", l: "Email", v: "zharfantbt@gmail.com", href: "mailto:zharfantbt@gmail.com" },
+  { i: "📧", l: "Email", v: "zharfan3264@gmail.com", href: "mailto:zharfan3264@gmail.com" },
   { i: "💼", l: "LinkedIn", v: "linkedin.com/in/zharfan-tashbir", href: "https://linkedin.com/in/zharfan-tashbir" },
   { i: "📍", l: "Location", v: "Balikpapan, East Kalimantan · Open to relocation", href: null },
 ];
